@@ -97,7 +97,6 @@ public class BlacklistUtils {
         // Private and unknown number matching
         if (TextUtils.isEmpty(number)) {
             if (isBlacklistPrivateNumberEnabled(context, mode)) {
-                if (DEBUG) Log.d(TAG, "Blacklist matched due to private number");
                 return MATCH_PRIVATE;
             }
             return MATCH_NONE;
@@ -106,7 +105,6 @@ public class BlacklistUtils {
         if (isBlacklistUnknownNumberEnabled(context, mode)) {
             CallerInfo ci = CallerInfo.getCallerInfo(context, number);
             if (!ci.contactExists) {
-                if (DEBUG) Log.d(TAG, "Blacklist matched due to unknown number");
                 return MATCH_UNKNOWN;
             }
         }
@@ -148,7 +146,6 @@ public class BlacklistUtils {
             c.close();
         }
 
-        if (DEBUG) Log.d(TAG, "Blacklist check result for number " + number + " is " + result);
         return result;
     }
 
