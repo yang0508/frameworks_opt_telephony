@@ -70,10 +70,12 @@ public class SamsungQualcommRIL extends RIL implements CommandsInterface {
     private boolean driverCall = needsOldRilFeature("newDriverCall");
     private boolean driverCallU = needsOldRilFeature("newDriverCallU");
     private boolean dialCode = needsOldRilFeature("newDialCode");
+    private boolean samsungEmergency = needsOldRilFeature("samsungEMSReq");
     public SamsungQualcommRIL(Context context, int networkMode,
             int cdmaSubscription) {
         super(context, networkMode, cdmaSubscription);
         mAudioManager = (AudioManager)mContext.getSystemService(Context.AUDIO_SERVICE);
+        mQANElements = SystemProperties.getInt("ro.ril.telephony.mqanelements", 4);
     }
 
     @Override
@@ -229,7 +231,7 @@ public class SamsungQualcommRIL extends RIL implements CommandsInterface {
     @Override
     protected RadioState getRadioStateFromInt(int stateInt) {
         if(!oldRilState)
-            super.getRadioStateFromInt(stateInt);
+             return super.getRadioStateFromInt(stateInt);
         RadioState state;
 
         /* RIL_RadioState ril.h */
@@ -286,11 +288,9 @@ public class SamsungQualcommRIL extends RIL implements CommandsInterface {
                 ret = responseInts(p);
                 setRadioPower(false, null);
                 setPreferredNetworkType(mPreferredNetworkType, null);
-                int cdmaSubscription = Settings.Global.getInt(mContext.getContentResolver(), Settings.Global.CDMA_SUBSCRIPTION_MODE, -1);
-                if(cdmaSubscription != -1) {
-                    setCdmaSubscriptionSource(mCdmaSubscription, null);
-                }
-                setCellInfoListRate(Integer.MAX_VALUE, null);
+                setCdmaSubscriptionSource(mCdmaSubscription, null);
+                if(mRilVersion >= 8)
+                    setCellInfoListRate(Integer.MAX_VALUE, null);
                 notifyRegistrantsRilConnectionChanged(((int[])ret)[0]);
                 break;
             case RIL_UNSOL_NITZ_TIME_RECEIVED:
@@ -729,6 +729,10 @@ public class SamsungQualcommRIL extends RIL implements CommandsInterface {
     @Override
     public void
     dial(String address, int clirMode, UUSInfo uusInfo, Message result) {
+        if (samsungEmergency && PhoneNumberUtils.isEmergencyNumber(address)) {
+            dialEmergencyCall(address, clirMode, result);
+            return;
+        }
         if(!dialCode){
             super.dial(address, clirMode, uusInfo, result);
             return;
@@ -786,4 +790,35 @@ public class SamsungQualcommRIL extends RIL implements CommandsInterface {
 
         return ret;
     }
+
+    @Override
+    public void getImsRegistrationState(Message result) {
+        if(mRilVersion >= 8)
+            super.getImsRegistrationState(result);
+        else {
+            if (result != null) {
+                CommandException ex = new CommandException(
+                    CommandException.Error.REQUEST_NOT_SUPPORTED);
+                AsyncResult.forMessage(result, null, ex);
+                result.sendToTarget();
+            }
+        }
+    }
+
+    static final int RIL_REQUEST_DIAL_EMERGENCY = 10016;
+    public void
+    dialEmergencyCall(String address, int clirMode, Message result) {
+        RILRequest rr;
+        Rlog.v(RILJ_LOG_TAG, "Emergency dial: " + address);
+
+        rr = RILRequest.obtain(RIL_REQUEST_DIAL_EMERGENCY, result);
+        rr.mParcel.writeString(address + "/");
+        rr.mParcel.writeInt(clirMode);
+        rr.mParcel.writeInt(0);  // UUS information is absent
+
+        if (RILJ_LOGD) riljLog(rr.serialString() + "> " + requestToString(rr.mRequest));
+
+        send(rr);
+    }
+
 }
