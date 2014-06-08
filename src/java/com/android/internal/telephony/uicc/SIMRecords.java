@@ -662,7 +662,8 @@ public class SIMRecords extends IccRecords {
 
                 if (mMncLength != UNKNOWN && mMncLength != UNINITIALIZED) {
                     // finally have both the imsi and the mncLength and can parse the imsi properly
-                    MccTable.updateMccMncConfiguration(mContext, mImsi.substring(0, 3 + mMncLength));
+                    MccTable.updateMccMncConfiguration(mContext,
+                            mImsi.substring(0, 3 + mMncLength), false);
                 }
                 mImsiReadyRegistrants.notifyRegistrants();
             break;
@@ -905,7 +906,7 @@ public class SIMRecords extends IccRecords {
                         // finally have both imsi and the length of the mnc and can parse
                         // the imsi properly
                         MccTable.updateMccMncConfiguration(mContext,
-                                mImsi.substring(0, 3 + mMncLength));
+                                mImsi.substring(0, 3 + mMncLength), false);
                     }
                 }
             break;
@@ -1557,6 +1558,7 @@ public class SIMRecords extends IccRecords {
                     if (DBG) log("Load EF_SPN: " + mSpn
                             + " spnDisplayCondition: " + mSpnDisplayCondition);
                     setSystemProperty(PROPERTY_ICC_OPERATOR_ALPHA, mSpn);
+                    mRecordsEventsRegistrants.notifyResult(EVENT_SPN);
 
                     mSpnState = GetSpnFsmState.IDLE;
                 } else {
@@ -1578,7 +1580,7 @@ public class SIMRecords extends IccRecords {
 
                     if (DBG) log("Load EF_SPN_CPHS: " + mSpn);
                     setSystemProperty(PROPERTY_ICC_OPERATOR_ALPHA, mSpn);
-
+                    mRecordsEventsRegistrants.notifyResult(EVENT_SPN);
                     mSpnState = GetSpnFsmState.IDLE;
                 } else {
                     mFh.loadEFTransparent(
@@ -1595,6 +1597,7 @@ public class SIMRecords extends IccRecords {
 
                     if (DBG) log("Load EF_SPN_SHORT_CPHS: " + mSpn);
                     setSystemProperty(PROPERTY_ICC_OPERATOR_ALPHA, mSpn);
+                    mRecordsEventsRegistrants.notifyResult(EVENT_SPN);
                 }else {
                     if (DBG) log("No SPN loaded in either CHPS or 3GPP");
                 }

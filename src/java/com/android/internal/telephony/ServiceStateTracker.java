@@ -16,6 +16,7 @@
 
 package com.android.internal.telephony;
 
+import android.content.Context;
 import android.os.AsyncResult;
 import android.os.Handler;
 import android.os.Message;
@@ -25,6 +26,7 @@ import android.os.SystemClock;
 import android.telephony.CellInfo;
 import android.telephony.ServiceState;
 import android.telephony.SignalStrength;
+import android.text.TextUtils;
 import android.util.Pair;
 import android.util.TimeUtils;
 import android.net.ConnectivityManager;
@@ -193,6 +195,8 @@ public abstract class ServiceStateTracker extends Handler {
         "tg", // Togo
     };
 
+    private ArrayList<CellInfoResult> mCellInfoWaitList;
+
     private class CellInfoResult {
         List<CellInfo> list;
         Object lockObj = new Object();
@@ -206,6 +210,7 @@ public abstract class ServiceStateTracker extends Handler {
         mPhoneBase = phoneBase;
         mCellInfo = cellInfo;
         mCi = ci;
+        mCellInfoWaitList = new ArrayList<CellInfoResult>();
         mVoiceCapable = mPhoneBase.getContext().getResources().getBoolean(
                 com.android.internal.R.bool.config_voice_capable);
         mUiccController = UiccController.getInstance();
@@ -221,6 +226,13 @@ public abstract class ServiceStateTracker extends Handler {
         mCi.unSetOnSignalStrengthUpdate(this);
         mUiccController.unregisterForIccChanged(this);
         mCi.unregisterForCellInfoList(this);
+        for (CellInfoResult result : mCellInfoWaitList) {
+            synchronized(result.lockObj) {
+                result.list = null;
+                result.lockObj.notify();
+            }
+        }
+        mCellInfoWaitList.clear();
     }
 
     public boolean getDesiredPowerState() {
@@ -419,6 +431,7 @@ public abstract class ServiceStateTracker extends Handler {
                     mLastCellInfoListTime = SystemClock.elapsedRealtime();
                     mLastCellInfoList = result.list;
                     result.lockObj.notify();
+                    mCellInfoWaitList.remove(result);
                 }
                 break;
             }
@@ -739,10 +752,12 @@ public abstract class ServiceStateTracker extends Handler {
                     synchronized(result.lockObj) {
                         mCi.getCellInfoList(msg);
                         try {
+                            mCellInfoWaitList.add(result);
                             result.lockObj.wait();
                         } catch (InterruptedException e) {
                             e.printStackTrace();
                             result.list = null;
+                            mCellInfoWaitList.remove(result);
                         }
                     }
                 } else {
@@ -847,5 +862,13 @@ public abstract class ServiceStateTracker extends Handler {
 
         DcTrackerBase dcTracker = mPhoneBase.mDcTracker;
         dcTracker.disableApnType(PhoneConstants.APN_TYPE_DEFAULT);
+    }
+
+    protected void updateCarrierMccMncConfiguration(String newOp, String oldOp, Context context) {
+        // if we have a change in operator, notify wifi (even to/from none)
+        if (((newOp == null) && (TextUtils.isEmpty(oldOp) == false)) ||
+                ((newOp != null) && (newOp.equals(oldOp) == false))) {
+            MccTable.updateMccMncConfiguration(context, newOp, true);
+        }
     }
 }
