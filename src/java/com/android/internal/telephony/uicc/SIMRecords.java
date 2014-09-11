@@ -450,7 +450,7 @@ public class SIMRecords extends IccRecords {
 
     public int getVoiceMessageCount() {
         boolean voiceMailWaiting = false;
-        int countVoiceMessages = 0;
+        int countVoiceMessages = -1;
         if (mEfMWIS != null) {
             // Use this data if the EF[MWIS] exists and
             // has been loaded
@@ -1461,6 +1461,8 @@ public class SIMRecords extends IccRecords {
 
         mFh.loadEFTransparent(EF_GID1, obtainMessage(EVENT_GET_GID1_DONE));
         mRecordsToLoad++;
+
+        mFh.getEFLinearRecordSize(EF_SMS, obtainMessage(EVENT_GET_SMS_RECORD_SIZE_DONE));
 
         // XXX should seek instead of examining them all
         if (false) { // XXX
