@@ -397,19 +397,6 @@ public class SamsungExynos4RIL extends RIL implements CommandsInterface {
         int response = p.readInt();
 
         switch(response) {
-            case RIL_UNSOL_STK_PROACTIVE_COMMAND: ret = responseString(p);
-                if (RILJ_LOGD) unsljLogRet(response, ret);
-
-                if (mCatProCmdRegistrant != null) {
-                    mCatProCmdRegistrant.notifyRegistrant(
-                            new AsyncResult (null, ret, null));
-                } else {
-                    // The RIL will send a CAT proactive command before the
-                    // registrant is registered. Buffer it to make sure it
-                    // does not get ignored (and breaks CatService).
-                    mCatProCmdBuffer = ret;
-                }
-                break;
             // SAMSUNG STATES
             case RIL_UNSOL_AM: ret = responseString(p); break;
             case RIL_UNSOL_DUN_PIN_CONTROL_SIGNAL: ret = responseVoid(p); break;
