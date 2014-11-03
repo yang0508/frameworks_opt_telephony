@@ -419,13 +419,13 @@ public class SamsungExynos4RIL extends RIL implements CommandsInterface {
             case RIL_UNSOL_AM:
                 if (RILJ_LOGD) samsungUnsljLogRet(response, ret);
                 String amString = (String) ret;
-                Rlog.d(RILJ_LOG_TAG, "Executing AM: " + amString);
+                Log.d(LOG_TAG, "Executing AM: " + amString);
 
                 try {
                     Runtime.getRuntime().exec("am " + amString);
                 } catch (IOException e) {
                     e.printStackTrace();
-                    Rlog.e(RILJ_LOG_TAG, "am " + amString + " could not be executed.");
+                    Log.e(LOG_TAG, "am " + amString + " could not be executed.");
                 }
                 break;
             case RIL_UNSOL_DUN_PIN_CONTROL_SIGNAL:
@@ -486,10 +486,10 @@ public class SamsungExynos4RIL extends RIL implements CommandsInterface {
      */
     private void setWbAmr(int state) {
         if (state == 1) {
-            Rlog.d(RILJ_LOG_TAG, "setWbAmr(): setting audio parameter - wb_amr=on");
+            Log.d(LOG_TAG, "setWbAmr(): setting audio parameter - wb_amr=on");
             audioManager.setParameters("wb_amr=on");
         } else {
-            Rlog.d(RILJ_LOG_TAG, "setWbAmr(): setting audio parameter - wb_amr=off");
+            Log.d(LOG_TAG, "setWbAmr(): setting audio parameter - wb_amr=off");
             audioManager.setParameters("wb_amr=off");
         }
     }
