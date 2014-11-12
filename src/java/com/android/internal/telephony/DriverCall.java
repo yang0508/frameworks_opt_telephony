@@ -43,7 +43,6 @@ public class DriverCall implements Comparable<DriverCall> {
     public boolean isMpty;
     public String number;
     public int TOA;
-    public boolean isVideo;
     public boolean isVoice;
     public boolean isVoicePrivacy;
     public int als;
@@ -66,7 +65,6 @@ public class DriverCall implements Comparable<DriverCall> {
             ret.isMT = p.nextBoolean();
             ret.state = stateFromCLCC(p.nextInt());
 
-            ret.isVideo = p.nextBoolean();
             ret.isVoice = (0 == p.nextInt());
             ret.isMpty = p.nextBoolean();
 
@@ -113,7 +111,6 @@ public class DriverCall implements Comparable<DriverCall> {
                 + (isMT ? "mt" : "mo") + ","
                 + als + ","
                 + (isVoice ? "voc" : "nonvoc") + ","
-                + (isVideo ? "video" : "no_video") + ","
                 + (isVoicePrivacy ? "evp" : "noevp") + ","
                 /*+ "number=" + number */ + ",cli=" + numberPresentation + ","
                 /*+ "name="+ name */ + "," + namePresentation;

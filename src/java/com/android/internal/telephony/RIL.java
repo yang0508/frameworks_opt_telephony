@@ -3618,7 +3618,6 @@ public class RIL extends BaseCommands implements CommandsInterface {
             dc.isMT = (0 != p.readInt());
             dc.als = p.readInt();
             voiceSettings = p.readInt();
-            dc.isVideo = (0 != p.readInt());
             dc.isVoice = (0 == voiceSettings) ? false : true;
             dc.isVoicePrivacy = (0 != p.readInt());
             dc.number = p.readString();
